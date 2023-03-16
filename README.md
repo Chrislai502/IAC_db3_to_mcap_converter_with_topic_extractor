@@ -1,4 +1,5 @@
 # Script for extracting specific topics from ROS2 messages in an MCAP bag using the rosbag2_py API.
+# ROS2 mcap Rosbag Topic Extractor
 
 ## Description
 This script extracts specific topics from an MCAP bag and creates a new bag with only those topics. The script reads the input bag file and writes the desired topics into a new output bag file. The user can specify the topics to be extracted and the output path for the new bag. 
