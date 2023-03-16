@@ -1,5 +1,3 @@
-
-
 """script that reads ROS2 messages from an MCAP bag using the rosbag2_py API."""
 import argparse
 
