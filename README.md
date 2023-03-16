@@ -30,3 +30,7 @@ When executed, the script will read all the messages in the input bag file and c
 
 ## Note
 This script assumes that the input bag has messages in the CDR serialization format. If the input bag has messages in a different serialization format, please modify the `input_serialization_format` and `output_serialization_format` options in the `ConverterOptions` class.
+
+## Sources
+https://github.com/foxglove/mcap/blob/main/python/examples/ros2/py_mcap_demo/py_mcap_demo/writer.py
+https://github.com/foxglove/mcap/blob/main/python/examples/ros2/py_mcap_demo/py_mcap_demo/reader.py
