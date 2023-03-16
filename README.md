@@ -13,7 +13,7 @@ python3 script.py input_bag
 Where `input_bag` is the path to the input bag directory.
 
 ## Parameters
-The script uses two parameters: 
+The script uses two parameters you can change in main.py: 
 
 - `TOPICS_TO_EXTRACT`: Desired topics to extract from the bag.
 - `OUTPUT_PATH`: Output path for the new bag.
