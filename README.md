@@ -1,4 +1,3 @@
-# Script for extracting specific topics from ROS2 messages in an MCAP bag using the rosbag2_py API.
 # ROS2 mcap Rosbag Topic Extractor
 
 ## Description
