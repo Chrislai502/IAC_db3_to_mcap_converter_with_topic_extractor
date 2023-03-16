@@ -14,10 +14,15 @@ import rosbag2_py
 # ---------------------------------------------------------------------------- #
 
 # Desired topics to extract from the bag
-TOPICS_TO_EXTRACT = ["/luminar_front_points", "/luminar_left_points", "/luminar_right_points"]  
+TOPICS_TO_EXTRACT = ["/luminar_front_points", "/luminar_left_points", "/luminar_right_points", \
+                     "/radar_front_est_input", '/novatel_top_input', '/novatel_pos_input', \
+                     "/radar_front/radar_visz_static", "/radar_front/radar_visz_static_array",\
+                     "/radar_front/radar_visz_moving", "/radar_front/radar_visz_moving_array",\
+                      "/perception/lvms_inside_vis", "/perception/lvms_outside_vis", \
+                        '/radar_right/marker', '/radar_right_input']  
 
 # Output path for the new bag
-OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/overtake_yolov7_best_1/"
+OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/radar_only/"
 # ---------------------------------------------------------------------------- #
 
 
@@ -66,6 +71,8 @@ def read_messages(input_bag: str, topics_to_extract: list = None):
     global TYPE_MAP
     TOPIC_TYPES = reader.get_all_topics_and_types()
     TYPE_MAP = {TOPIC_TYPES[i].name: TOPIC_TYPES[i].type for i in range(len(TOPIC_TYPES))}
+    for i in TYPE_MAP:
+        print(i, "  |  ",  TYPE_MAP[i])
 
     # Sequentially read messages from the bag, one by one. 
     while reader.has_next():
@@ -73,8 +80,8 @@ def read_messages(input_bag: str, topics_to_extract: list = None):
         # Read the next message
         topic_name, data, timestamp = reader.read_next()
 
-        # Check if the topic is in the list of topics to extract.
-        if topic_name in topics_to_extract:
+        # Check if the topic is in the set of topics to extract.
+        if topic_name in set(topics_to_extract):
           topic_type = TYPE_MAP[topic_name]
           msg_type = get_message(topic_type)
           msg = deserialize_message(data, msg_type)
@@ -167,6 +174,8 @@ def main():
     # Make sure that all the lists are of same length
     assert len(topic_names) == len(messages) == len(timestamps)
     print("Passed the assertion check.\n")
+
+    print("Type Map: ", TYPE_MAP, "\n")
 
     # Writing the messages to a new bag
     print("Writing messages to bag...\n")
