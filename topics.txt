@@ -1,3 +1,6 @@
+# ---------------------------------------------------------------------------- #
+#                                    VISION                                    #
+# ---------------------------------------------------------------------------- #
 /visualization   |   sensor_msgs/msg/Image
 /vimba_rear_right/camera_info   |   sensor_msgs/msg/CameraInfo
 /vimba_front_right_center/image   |   sensor_msgs/msg/Image
@@ -5,100 +8,133 @@
 /radar_front/radar_visz_static_array   |   visualization_msgs/msg/MarkerArray
 /vimba_rear_left/image/compressed   |   sensor_msgs/msg/CompressedImage
 /vimba_fl/det_image   |   sensor_msgs/msg/Image
-/robot_description   |   std_msgs/msg/String
-/gps_top/pose   |   geometry_msgs/msg/PoseWithCovarianceStamped
-/clock   |   rosgraph_msgs/msg/Clock
-/ct_manager/critical_sensors_status   |   std_msgs/msg/Bool
-/luminar_front_points   |   sensor_msgs/msg/PointCloud2
-/luminar_left_points   |   sensor_msgs/msg/PointCloud2
-/initialpose   |   geometry_msgs/msg/PoseWithCovarianceStamped
-/rpp/trajectory_reference   |   visualization_msgs/msg/MarkerArray
-
-/gps_top/gps   |   gps_msgs/msg/GPSFix
-/novatel_bottom/fix   |   sensor_msgs/msg/NavSatFix
-
-/gps_bot/imu   |   sensor_msgs/msg/Imu
-
-/vimba_rear_right/image/compressed   |   sensor_msgs/msg/CompressedImage
-/clicked_point   |   geometry_msgs/msg/PointStamped
-/raptor_dbw_interface/socket_can_sender/transition_event   |   lifecycle_msgs/msg/TransitionEvent
-/luminar_front_points/points_raw/ground_filtered   |   sensor_msgs/msg/PointCloud2
-/novatel_top/gps   |   gps_msgs/msg/GPSFix
-/perception/lvms_inside   |   geometry_msgs/msg/Polygon
-/radar_left/marker   |   visualization_msgs/msg/Marker
-/joint_states   |   sensor_msgs/msg/JointState
-/novatel_bottom/imu/data   |   sensor_msgs/msg/Imu
-/novatel_top/imu/data   |   sensor_msgs/msg/Imu
 /vimba_front_left/image   |   sensor_msgs/msg/Image
-/rpp/trajectory_viz   |   visualization_msgs/msg/MarkerArray
-/radar_front/radar_visz_static   |   visualization_msgs/msg/Marker
-/points_raw/concatenated   |   sensor_msgs/msg/PointCloud2
-/luminar_front_points/filtered   |   sensor_msgs/msg/PointCloud2
-/radar_front/radar_visz_moving_array   |   visualization_msgs/msg/MarkerArray
-/gps_top/orientation   |   geometry_msgs/msg/PoseWithCovarianceStamped
-/novatel_bottom/odom   |   nav_msgs/msg/Odometry
-/points_raw/ego_cropped   |   sensor_msgs/msg/PointCloud2
-/vimba_rear_left/camera_info   |   sensor_msgs/msg/CameraInfo
-/luminar_left_points/filtered   |   sensor_msgs/msg/PointCloud2
-/luminar_driver_rr/transition_event   |   lifecycle_msgs/msg/TransitionEvent
-/perception/lvms_outside   |   geometry_msgs/msg/Polygon
-/novatel_bottom/gps   |   gps_msgs/msg/GPSFix
-/vimba_fr/det_image   |   sensor_msgs/msg/Image
-/raptor_dbw_interface/to_can_bus   |   can_msgs/msg/Frame
-/vimba_front_left_center/camera_info   |   sensor_msgs/msg/CameraInfo
-/radar_front/from_can_bus   |   can_msgs/msg/Frame
-/vimba_front_left/image/compressed   |   sensor_msgs/msg/CompressedImage
-/raptor_dbw_interface/from_can_bus   |   can_msgs/msg/Frame
-/reset_vks   |   std_msgs/msg/Empty
-/radar_right/marker_array   |   visualization_msgs/msg/MarkerArray
-/luminar_left_points/points_raw/ground_filtered   |   sensor_msgs/msg/PointCloud2
-/vimba_rear_left/image   |   sensor_msgs/msg/Image
-/radar_front/to_can_bus   |   can_msgs/msg/Frame
-/gps_top/imu   |   sensor_msgs/msg/Imu
-/ego_crop_box_filter/crop_box_polygon   |   geometry_msgs/msg/PolygonStamped
-/parameter_events   |   rcl_interfaces/msg/ParameterEvent
-/rosout   |   rcl_interfaces/msg/Log
-/tf   |   tf2_msgs/msg/TFMessage
-/radar_front/radar_visz_moving   |   visualization_msgs/msg/Marker
-/path   |   nav_msgs/msg/Path
-/tf_static   |   tf2_msgs/msg/TFMessage
 /vimba_front_right/image/compressed   |   sensor_msgs/msg/CompressedImage
 /vimba/det3d   |   vision_msgs/msg/Detection2DArray
 /vimba_rl/det_image   |   sensor_msgs/msg/Image
 /vimba_front_left_center/image   |   sensor_msgs/msg/Image
-/vimba_front_left_center/image/compressed   |   sensor_msgs/msg/CompressedImage
-/crop_box_filter/crop_box_polygon   |   geometry_msgs/msg/PolygonStamped
-/novatel_top/odom   |   nav_msgs/msg/Odometry
-/goal_pose   |   geometry_msgs/msg/PoseStamped
-/slip_angle   |   std_msgs/msg/Float64
-/car_heading_stamped   |   geometry_msgs/msg/QuaternionStamped
-/gps_bot/gps   |   gps_msgs/msg/GPSFix
-/diagnostics   |   diagnostic_msgs/msg/DiagnosticArray
+/vimba_frc/det_image   |   sensor_msgs/msg/Image
+/vimba_rear_left/image   |   sensor_msgs/msg/Image
+/vimba_fr/det_image   |   sensor_msgs/msg/Image
+/vimba_rear_right/image/compressed   |   sensor_msgs/msg/CompressedImage
+/vimba_front_left_center/camera_info   |   sensor_msgs/msg/CameraInfo
+/vimba_front_left/image/compressed   |   sensor_msgs/msg/CompressedImage
 /vimba_flc/det_image   |   sensor_msgs/msg/Image
-/radar_right/marker   |   visualization_msgs/msg/Marker
 /vimba_rear_right/image   |   sensor_msgs/msg/Image
 /vimba_front_left/camera_info   |   sensor_msgs/msg/CameraInfo
-/raptor_dbw_interface/socket_can_receiver/transition_event   |   lifecycle_msgs/msg/TransitionEvent
-/points_raw/cropped   |   sensor_msgs/msg/PointCloud2
-/vimba_front_right_center/camera_info   |   sensor_msgs/msg/CameraInfo
-/rpp/path_command   |   nav_msgs/msg/Path
+/vimba_front_right_center/camera_info   |   sensor_msgs/msg/camera_info
 /vimba_rr/det_image   |   sensor_msgs/msg/Image
 /vimba_front_right/camera_info   |   sensor_msgs/msg/CameraInfo
-/vehicle/reset_state   |   std_msgs/msg/Empty
-/socket_can_sender_radar_front/transition_event   |   lifecycle_msgs/msg/TransitionEvent
-/gps_bot/pose   |   geometry_msgs/msg/PoseWithCovarianceStamped
-/luminar_driver_f/transition_event   |   lifecycle_msgs/msg/TransitionEvent
 /vimba_front_right/image   |   sensor_msgs/msg/Image
-/perception/lvms_inside_vis   |   geometry_msgs/msg/PolygonStamped
-/car_emergency_state   |   std_msgs/msg/Bool
 /vimba_front_right_center/image/compressed   |   sensor_msgs/msg/CompressedImage
-/ttl   |   nav_msgs/msg/Path
-/luminar_driver_lr/transition_event   |   lifecycle_msgs/msg/TransitionEvent
-/gps_bot/orientation   |   geometry_msgs/msg/PoseWithCovarianceStamped
+
+/robot_description   |   std_msgs/msg/String
+
+# EMPTY /clock   |   rosgraph_msgs/msg/Clock
+# EMPTY /ct_manager/critical_sensors_status   |   std_msgs/msg/Bool
+
+# ---------------------------------------------------------------------------- #
+#                                    LUMINAR                                   #
+# ---------------------------------------------------------------------------- #
+/luminar_front_points   |   sensor_msgs/msg/PointCloud2
+/luminar_left_points   |   sensor_msgs/msg/PointCloud2
 /luminar_right_points   |   sensor_msgs/msg/PointCloud2
 /luminar_right_points/points_raw/ground_filtered   |   sensor_msgs/msg/PointCloud2
-/points_raw/inside_poly_removed   |   sensor_msgs/msg/PointCloud2
-/vimba_frc/det_image   |   sensor_msgs/msg/Image
+/luminar_front_points/points_raw/ground_filtered   |   sensor_msgs/msg/PointCloud2
+/points_raw/concatenated   |   sensor_msgs/msg/PointCloud2
+/luminar_front_points/filtered   |   sensor_msgs/msg/PointCloud2
+/luminar_left_points/filtered   |   sensor_msgs/msg/PointCloud2
+/points_raw/ego_cropped   |   sensor_msgs/msg/PointCloud2
+/luminar_left_points/points_raw/ground_filtered   |   sensor_msgs/msg/PointCloud2
+/points_raw/cropped   |   sensor_msgs/msg/PointCloud2
 /luminar_right_points/filtered   |   sensor_msgs/msg/PointCloud2
+/points_raw/inside_poly_removed   |   sensor_msgs/msg/PointCloud2
+/luminar_driver_f/transition_event   |   lifecycle_msgs/msg/TransitionEvent
+/luminar_driver_lr/transition_event   |   lifecycle_msgs/msg/TransitionEvent
+/luminar_driver_rr/transition_event   |   lifecycle_msgs/msg/TransitionEvent
+
+# ---------------------------------------------------------------------------- #
+#                                    NOVATEL                                   #
+# ---------------------------------------------------------------------------- #
+/gps_top/gps   |   gps_msgs/msg/GPSFix
+/gps_bot/imu   |   sensor_msgs/msg/Imu
+/novatel_bottom/fix   |   sensor_msgs/msg/NavSatFix
+/novatel_top/gps   |   gps_msgs/msg/GPSFix
+/novatel_bottom/imu/data   |   sensor_msgs/msg/Imu
+/novatel_top/imu/data   |   sensor_msgs/msg/Imu
+/novatel_bottom/odom   |   nav_msgs/msg/Odometry
+/novatel_bottom/gps   |   gps_msgs/msg/GPSFix
+/gps_top/orientation   |   geometry_msgs/msg/PoseWithCovarianceStamped
+/gps_top/imu   |   sensor_msgs/msg/Imu
+/gps_bot/gps   |   gps_msgs/msg/GPSFix
+# Works /gps_bot/pose   |   geometry_msgs/msg/PoseWithCovarianceStamped
+/gps_bot/orientation   |   geometry_msgs/msg/PoseWithCovarianceStamped
+/gps_top/pose   |   geometry_msgs/msg/PoseWithCovarianceStamped
  # All Zeros /novatel_top/fix   |   sensor_msgs/msg/NavSatFix
+
+# ---------------------------------------------------------------------------- #
+#                                   ODOMETRY                                   #
+# ---------------------------------------------------------------------------- #
+# Odometry with covariance /novatel_top/odom   |   nav_msgs/msg/Odometry
+
+
+# ---------------------------------------------------------------------------- #
+#                                     RADAR                                    #
+# ---------------------------------------------------------------------------- #
+/radar_left/marker   |   visualization_msgs/msg/Marker
+/radar_front/radar_visz_static   |   visualization_msgs/msg/Marker
+/radar_front/radar_visz_moving_array   |   visualization_msgs/msg/MarkerArray
+/radar_front/from_can_bus   |   can_msgs/msg/Frame
+/radar_right/marker_array   |   visualization_msgs/msg/MarkerArray
+/radar_front/to_can_bus   |   can_msgs/msg/Frame
+/radar_front/radar_visz_moving   |   visualization_msgs/msg/Marker
+/radar_right/marker   |   visualization_msgs/msg/Marker
+/socket_can_sender_radar_front/transition_event   |   lifecycle_msgs/msg/TransitionEvent
+
+
+# EMPTY /clicked_point   |   geometry_msgs/msg/PointStamped
+
+
+
+/perception/lvms_inside   |   geometry_msgs/msg/Polygon
+
+/joint_states   |   sensor_msgs/msg/JointState
+
+
+/rpp/trajectory_viz   |   visualization_msgs/msg/MarkerArray
+
+
+/perception/lvms_outside   |   geometry_msgs/msg/Polygon
+
+# ---------------------------------------------------------------------------- #
+#                           DRIVE BY WIRE INFORMATION                          #
+# ---------------------------------------------------------------------------- #
+# has data, but unknown format /raptor_dbw_interface/to_can_bus   |   can_msgs/msg/Frame
+# has data, but unknown format /raptor_dbw_interface/from_can_bus   |   can_msgs/msg/Frame 
+# EMPTY /raptor_dbw_interface/socket_can_sender/transition_event   |   lifecycle_msgs/msg/TransitionEvent
+
+/reset_vks   |   std_msgs/msg/Empty
+/ego_crop_box_filter/crop_box_polygon   |   geometry_msgs/msg/PolygonStamped
+/parameter_events   |   rcl_interfaces/msg/ParameterEvent
+/rosout   |   rcl_interfaces/msg/Log
+
+# ---------------------------------------------------------------------------- #
+#                                  TF MESSAGES                                 #
+# ---------------------------------------------------------------------------- #
+/tf   |   tf2_msgs/msg/TFMessage
+/tf_static   |   tf2_msgs/msg/TFMessage
+
+/path   |   nav_msgs/msg/Path
+
+
+
+
+
+# Empty for some reason :< /car_heading_stamped   |   geometry_msgs/msg/QuaternionStamped
+# Some debug message for lidar /diagnostics   |   diagnostic_msgs/msg/DiagnosticArray
+
+/perception/lvms_inside_vis   |   geometry_msgs/msg/PolygonStamped
+/ttl   |   nav_msgs/msg/Path
 /perception/lvms_outside_vis   |   geometry_msgs/msg/PolygonStamped
+# EMPTY /initialpose   |   geometry_msgs/msg/PoseWithCovarianceStamped
+# EMPTY /rpp/trajectory_reference   |   visualization_msgs/msg/MarkerArray

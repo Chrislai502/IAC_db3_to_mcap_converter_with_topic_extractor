@@ -4,7 +4,8 @@ import argparse
 from rclpy.serialization import deserialize_message
 from rclpy.serialization import serialize_message
 from rosidl_runtime_py.utilities import get_message
-
+import os
+import shutil
 import rosbag2_py
 
 # ---------------------------------------------------------------------------- #
@@ -13,14 +14,81 @@ import rosbag2_py
 
 # Desired topics to extract from the bag
 TOPICS_TO_EXTRACT = ["/luminar_front_points", "/luminar_left_points", "/luminar_right_points", \
-                     "/radar_front_est_input", '/novatel_top_input', '/novatel_pos_input', \
                      "/radar_front/radar_visz_static", "/radar_front/radar_visz_static_array",\
                      "/radar_front/radar_visz_moving", "/radar_front/radar_visz_moving_array",\
                       "/perception/lvms_inside_vis", "/perception/lvms_outside_vis", \
-                        '/radar_right/marker', '/radar_right_input']  
+                      '/radar_right/marker', '/radar_front/from_can_bus',  \
+                      '/radar_front/to_can_bus'
+,'/radar_front/esr_status1'\
+,'/radar_front/esr_status2'\
+,'/radar_front/esr_status3'\
+,'/radar_front/esr_status4'\
+,'/radar_front/esr_status5'\
+,'/radar_front/esr_status6'\
+,'/radar_front/esr_status7'\
+,'/radar_front/esr_status8'\
+,'/radar_front/esr_status9'\
+,'/radar_front/esr_track'\
+,'/radar_front/esr_valid1'\
+,'/radar_front/esr_valid2'\
+,'/radar_front/esr_vehicle1'\
+,'/radar_front/esr_vehicle2'\
+,'/radar_front/esr_vehicle3'\
+,'/radar_front/esr_vehicle4'\
+,'/radar_front/esr_vehicle5'\
+,'/radar_left/detection'\
+,'/radar_left/header_information_detections'\
+,'/radar_left/marker'\
+,'/radar_left/vehicle_state'\
+,'/radar_liadar_detected_objects'\
+,'/radar_right/detection'\
+,'/radar_right/header_information_detections'\
+,'/radar_right/marker'\
+,'/radar_right/marker_array'\
+,'/radar_right/vehicle_state'\
+
+# Novatel
+,'/novatel_bottom/bestgnsspos'\
+,'/novatel_bottom/bestgnssvel'\
+,'/novatel_bottom/bestpos'\
+,'/novatel_bottom/bestutm'\
+,'/novatel_bottom/bestvel'\
+,'/novatel_bottom/corrimu'\
+,'/novatel_bottom/fix'\
+,'/novatel_bottom/gps'\
+,'/novatel_bottom/heading2'\
+,'/novatel_bottom/imu/data'\
+,'/novatel_bottom/insconfig'\
+,'/novatel_bottom/inspva'\
+,'/novatel_bottom/inspvax'\
+,'/novatel_bottom/insstdev'\
+,'/novatel_bottom/odom'\
+,'/novatel_bottom/oem7raw'\
+,'/novatel_bottom/rawimu'\
+,'/novatel_bottom/rxstatus'\
+,'/novatel_bottom/time'\
+,'/novatel_top/bestgnsspos'\
+,'/novatel_top/bestgnssvel'\
+,'/novatel_top/bestpos'\
+,'/novatel_top/bestutm'\
+,'/novatel_top/bestvel'\
+,'/novatel_top/corrimu'\
+,'/novatel_top/fix'\
+,'/novatel_top/gps'\
+,'/novatel_top/heading2'\
+,'/novatel_top/imu/data'\
+,'/novatel_top/insconfig'\
+,'/novatel_top/inspva'\
+,'/novatel_top/inspvax'\
+,'/novatel_top/insstdev'\
+,'/novatel_top/odom'\
+,'/novatel_top/oem7raw'\
+,'/novatel_top/rawimu'\
+,'/novatel_top/rxstatus'\
+,'/novatel_top/time']
 
 # Output path for the new bag
-OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/radar_only/"
+OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/radar_only/wheel_spoke_and_mirror/"
 # ---------------------------------------------------------------------------- #
 
 
@@ -112,6 +180,10 @@ def create_topic(writer, topic_name, serialization_format='cdr'):
 def write_to(topic_names: list, messages: list, timestamps: list, output_path: str = "output/"):
     
     writer = rosbag2_py.SequentialWriter()
+
+    # If the folder already exists, delete it
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
 
     # Opens the bag file and sets the converter options
     writer.open(
