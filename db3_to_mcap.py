@@ -16,7 +16,7 @@ import time
 # ---------------------------------------------------------------------------- #
 
 # Output path for the new bag
-OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/mittPittBag/"
+OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/tent_mcap/"
 # ---------------------------------------------------------------------------- #
 
 
@@ -38,7 +38,8 @@ class MessageIterator:
     def __deserialize(self, row):
         timestamp, data = row
         try:
-            return timestamp, deserialize_message(data, self.message_type)
+            # return timestamp, deserialize_message(data, self.message_type)
+            return timestamp, data
         except:
             print("Error deserializing message")
             print("Timestamp: ", timestamp)
@@ -203,7 +204,9 @@ def main():
     # Write messages to the output bag
     while message_iterators != []:
         iterator_arr = min(message_iterators, key=lambda x: x[0]) # Get the iterator with the earliest message
-        writer.write(iterator_arr[2], serialize_message(iterator_arr[1]), iterator_arr[0])
+        # writer.write(iterator_arr[2], serialize_message(iterator_arr[1]), iterator_arr[0])
+        writer.write(iterator_arr[2], iterator_arr[1], iterator_arr[0])
+
         
         # Update the iterator array with the next message
         try:
@@ -212,11 +215,13 @@ def main():
             message_iterators.remove(iterator_arr)
 
         counter += 1
-        # if counter % 1000 == 0:
-        print(f"Messages Written: {counter}")
+        if counter % 1000 == 0:
+            print(f"Messages Written: {counter}")
     
     # Close the bag file
     del writer
+
+    print("Finished Writing Messages to Output Bag! Enjoy your new bag file :)")
 
 if __name__ == "__main__":
     main()
