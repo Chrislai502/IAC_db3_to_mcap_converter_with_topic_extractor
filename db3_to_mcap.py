@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 from typing import Union
-import multiprocessing
+# import multiprocessing
 from rclpy.serialization import deserialize_message
 from rclpy.serialization import serialize_message
 from rosidl_runtime_py.utilities import get_message
@@ -9,6 +9,7 @@ import rosbag2_py
 import os
 # from rclpy.serialization import serialize_message
 import shutil
+import time
 
 # ---------------------------------------------------------------------------- #
 #                                  PARAMETERS                                  #
@@ -36,7 +37,15 @@ class MessageIterator:
 
     def __deserialize(self, row):
         timestamp, data = row
-        return timestamp, deserialize_message(data, self.message_type)
+        try:
+            return timestamp, deserialize_message(data, self.message_type)
+        except:
+            print("Error deserializing message")
+            print("Timestamp: ", timestamp)
+            print("Data: ", self.message_type)
+            time.sleep(1)
+            return
+        # return timestamp, deserialize_message(data, self.message_type)
 
     def __fetch_some(self):
         pass
@@ -151,6 +160,7 @@ def main():
     print ("Creating Message Iterators...")
     counter = 0
     for topic in available_topics:
+        
         # Create an array of (earliest_timestamp, earliest_msg, topic, message_type, message_iterator)
         message_iterator = parser.get_messages(topic, lazy=True)
         message_iterator = message_iterator.__iter__()
@@ -166,7 +176,7 @@ def main():
     print(f"{counter} Message Iterators Created out of {len(available_topics)} available!")
 
     # ---------------------------------------------------------------------------- #
-    #                            Writing into output bag                           #
+    #                            Writing into output mcap bag                      #
     # ---------------------------------------------------------------------------- #
     writer = rosbag2_py.SequentialWriter()
 
