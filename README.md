@@ -1,18 +1,22 @@
-# ROS2 mcap Rosbag Topic Extractor
+# ROS2 bag mcap Topic Extractor / db3 to mcap converter
 
 ## Description
-This script extracts specific topics from an MCAP bag and creates a new bag with only those topics. The script reads the input bag file and writes the desired topics into a new output bag file. The user can specify the topics to be extracted and the output path for the new bag. 
+This repository contains 2 scripts, an db3_to_mcap converter and mcap_topic_extractor.
 
 ## Usage
-To use the script, navigate to the directory where the script is located and run the following command in the terminal: 
+To use the mcap_topic_extractor, navigate to the directory where the script is located and run the following command in the terminal: 
 
 ```
-python3 script.py input_bag
+python3 mcap_topic_extractor.py /path/to/input_bag/
 ```
 
-Where `input_bag` is the path to the input bag directory.
+To use the mcap_topic_extractor, navigate to the directory where the script is located and run the following command in the terminal: 
 
-## Parameters
+```
+python3 db3_to_mcap.py /input/bag/bag.db3 /output/path/ 
+```
+
+## Parameters For mcap_topic_extractor
 The script uses two parameters you can change in main.py: 
 
 - `TOPICS_TO_EXTRACT`: Desired topics to extract from the bag.
