@@ -11,15 +11,6 @@ import os
 import shutil
 import time
 
-# ---------------------------------------------------------------------------- #
-#                                  PARAMETERS                                  #
-# ---------------------------------------------------------------------------- #
-
-# Output path for the new bag
-OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/tent_mcap_size1000/"
-# ---------------------------------------------------------------------------- #
-
-
 class MessageIterator:
     def __init__(self, cur, buffer_size: int = 1000) -> None:
         self.cur = cur
