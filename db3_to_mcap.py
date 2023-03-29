@@ -21,7 +21,7 @@ OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags
 
 
 class MessageIterator:
-    def __init__(self, cur, buffer_size: int = 5000) -> None:
+    def __init__(self, cur, buffer_size: int = 1000) -> None:
         self.cur = cur
         self.len = self.cur.rowcount
         self.buffer_size = buffer_size
@@ -122,6 +122,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "input", help="input bag path (folder or filepath) to read from"
+        
+    )
+    parser.add_argument(
+        "output", help="output bag path (folder or filepath) to write to"
     )
 
     args = parser.parse_args()
@@ -143,12 +147,12 @@ def main():
     writer = rosbag2_py.SequentialWriter()
 
     # If the folder already exists, delete it
-    if os.path.exists(OUTPUT_PATH):
-        shutil.rmtree(OUTPUT_PATH)
+    if os.path.exists(args.output):
+        shutil.rmtree(args.output)
 
     # Opens the bag file and sets the converter options
     writer.open(
-        rosbag2_py.StorageOptions(uri=OUTPUT_PATH, storage_id="mcap"),
+        rosbag2_py.StorageOptions(uri=args.output, storage_id="mcap"),
         rosbag2_py.ConverterOptions(
             input_serialization_format="cdr", output_serialization_format="cdr"
         ),
