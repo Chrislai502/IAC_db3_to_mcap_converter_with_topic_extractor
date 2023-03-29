@@ -10,7 +10,7 @@ To use the mcap_topic_extractor, navigate to the directory where the script is l
 python3 mcap_topic_extractor.py /path/to/input_bag/
 ```
 
-To use the mcap_topic_extractor, navigate to the directory where the script is located and run the following command in the terminal: 
+To use the db3_to_mcap, run:
 
 ```
 python3 db3_to_mcap.py /input/bag/bag.db3 /output/path/ 
