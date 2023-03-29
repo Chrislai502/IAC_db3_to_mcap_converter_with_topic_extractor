@@ -4,7 +4,8 @@
 This repository contains 2 scripts, an db3_to_mcap converter and mcap_topic_extractor.
 
 ## Usage
-To use the mcap_topic_extractor, navigate to the directory where the script is located and run the following command in the terminal: 
+Navigate to the directory where the script is located and run the following command in the terminal.
+To use the mcap_topic_extractor:
 
 ```
 python3 mcap_topic_extractor.py /path/to/input_bag/
