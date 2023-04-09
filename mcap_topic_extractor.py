@@ -1,9 +1,6 @@
 """script that reads ROS2 messages from an MCAP bag using the rosbag2_py API."""
 import argparse
 
-from rclpy.serialization import deserialize_message
-from rclpy.serialization import serialize_message
-from rosidl_runtime_py.utilities import get_message
 import os
 import shutil
 import rosbag2_py
@@ -12,7 +9,28 @@ import rosbag2_py
 #                                  PARAMETERS                                  #
 # ---------------------------------------------------------------------------- #
 
-# Desired topics to extract from the bag
+# ----------------------------- Timestamp Filter ----------------------------- #
+# (For ART rosbags, you can use camera timestamps to filter the bag (NPC synced likely))
+# These are the start and end timestamps to filter the bag, all TOPICS_TO_EXTRACT
+# will be included in the output bag if they have a message within this time range.
+
+# Example timestamps:
+# sec: 1673037998
+# nanosec: 455526000
+# FROM_TIMESTAMP = 1673037998455526000
+FROM_TIMESTAMP = 1673037998455526000
+FROM_TIMESTAMP_TOPIC = "/vimba_front_right_center/image" # topic to check timestamp from
+
+# sec: 1673038010
+# nanosec: 792381600
+TO_TIMESTAMP = 1673038010792381600
+TO_TIMESTAMP_TOPIC = FROM_TIMESTAMP_TOPIC
+
+# ------------------------ Output path for the new bag ----------------------- #
+INPUT_PATH = "/media/Public/ROSBAG_BACKUPS/VEGAS_CES_2022/Jan6th_PTP_synced_cam_Lidar/rosbag2_2023_01_06-15_39_44/"
+OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/radar_only/timestamp_test/"
+
+# ---------------------- Topics to extract from the bag ---------------------- #
 TOPICS_TO_EXTRACT = ["/luminar_front_points", "/luminar_left_points", "/luminar_right_points", \
                      "/radar_front/radar_visz_static", "/radar_front/radar_visz_static_array",\
                      "/radar_front/radar_visz_moving", "/radar_front/radar_visz_moving_array",\
@@ -86,38 +104,57 @@ TOPICS_TO_EXTRACT = ["/luminar_front_points", "/luminar_left_points", "/luminar_
 ,'/novatel_top/rawimu'\
 ,'/novatel_top/rxstatus'\
 ,'/novatel_top/time']
-
-# Output path for the new bag
-OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/radar_only/wheel_spoke_and_mirror/"
 # ---------------------------------------------------------------------------- #
 
 
-
-
 # ---------------------------------------------------------------------------- #
-#                            READER FOR EXISTING BAG                           #
+#                                MESSAGE_FILTER                                #
 # ---------------------------------------------------------------------------- #
-# Get the message type for a topic
-def typename(topic_name, topic_types):
-    for topic_type in topic_types:
-        if topic_type.name == topic_name:
-            return topic_type.type
-    raise ValueError(f"topic {topic_name} not in bag")
-
-# Global topic_types variable when the bag is opened
-TOPIC_TYPES = None
-TYPE_MAP = None
-
-def read_messages(input_bag: str, topics_to_extract: list = None):
-    reader = rosbag2_py.SequentialReader()
+def message_filter(input_bag: str, topics_to_extract: list = None):
     
-    # Opens the bag file and sets the converter options
-    reader.open(
-        rosbag2_py.StorageOptions(uri=input_bag, storage_id="mcap"),
-        rosbag2_py.ConverterOptions(
-            input_serialization_format="cdr", output_serialization_format="cdr"
-        ),
-    )
+    global TOPIC_TYPES
+    global TYPE_MAP
+    global TOPICS_TO_EXTRACT
+    global FROM_TIMESTAMP
+    global TO_TIMESTAMP
+    global OUTPUT_PATH
+    global FROM_TIMESTAMP_TOPIC
+    global TO_TIMESTAMP_TOPIC
+
+    reader = rosbag2_py.SequentialReader()
+    writer = rosbag2_py.SequentialWriter()
+
+    # If the output folder already exists, ask the user if they want to delete it
+    if os.path.exists(OUTPUT_PATH):
+        print ("OUTPUT_PATH: ", OUTPUT_PATH, "\n")
+        answer = input("The OUTPUT_PATH already exists. Do you want to delete it? (y/n) ")
+        if answer.lower() == "y":
+            shutil.rmtree(OUTPUT_PATH)
+            print("Folder deleted.")
+        else:
+            print("Deletion cancelled.")
+            return
+
+    # Opens the bag files and sets the converter options
+    try:
+        reader.open(
+            rosbag2_py.StorageOptions(uri=input_bag, storage_id="mcap"),
+            rosbag2_py.ConverterOptions(
+                input_serialization_format="cdr", output_serialization_format="cdr"
+            ),
+        )
+
+        writer.open(
+            rosbag2_py.StorageOptions(uri=OUTPUT_PATH, storage_id="mcap"),
+            rosbag2_py.ConverterOptions(
+                input_serialization_format="cdr", output_serialization_format="cdr"
+            ),
+        )
+
+    except Exception as e:
+        print(e)
+        return
+    
 
     # Get all topics and types
     '''
@@ -131,81 +168,87 @@ def read_messages(input_bag: str, topics_to_extract: list = None):
     source: https://github.com/ros2/rosbag2/blob/c7c7954d4d9944c160d7b3d716d1cb95d34e37e4/rosbag2_py/test/test_sequential_reader.py
     storage_filter = rosbag2_py.StorageFilter(topics=['/topic'])
     reader.set_filter(storage_filter)
-
     '''
-    global TOPIC_TYPES
-    global TYPE_MAP
+
     TOPIC_TYPES = reader.get_all_topics_and_types()
     TYPE_MAP = {TOPIC_TYPES[i].name: TOPIC_TYPES[i].type for i in range(len(TOPIC_TYPES))}
+    
+    print ("\n\n All topics and types in the input bag: \n")
     for i in TYPE_MAP:
         print(i, "  |  ",  TYPE_MAP[i])
+    
+    # Check if FROM_TIMESTAMP_TOPIC and TO_TIMESTAMP_TOPIC are in the input bag
+    if FROM_TIMESTAMP_TOPIC not in TYPE_MAP or TO_TIMESTAMP_TOPIC not in TYPE_MAP:
+        print("ERROR: The topics for the timestamp range are not in the input bag.")
+        return
 
-    # Sequentially read messages from the bag, one by one. 
+
+    '''
+    This while loop does the following:
+    1. Read the next message
+    2. Check if the topic is in the set of topics to extract
+    '''
+    counter = 0
+    timestamp_buffer = 0
+    print ("\nIterating through the input bag...")
     while reader.has_next():
         
         # Read the next message
         topic_name, data, timestamp = reader.read_next()
 
-        # Check if the topic is in the set of topics to extract.
-        if topic_name in set(topics_to_extract):
-          topic_type = TYPE_MAP[topic_name]
-          msg_type = get_message(topic_type)
-          msg = deserialize_message(data, msg_type)
-          yield topic_name, msg, timestamp
+        if topic_name == FROM_TIMESTAMP_TOPIC and \
+            FROM_TIMESTAMP <= timestamp <= TO_TIMESTAMP_TOPIC:
 
-        # Implicit: else: continue
+            print("Found the first timestamp range!")
+            print("Timestamp: ", timestamp)
+
+            # Keep a map of the topics that are in the output bag
+            out_bag_topics = set()
+
+            curr_timestamp = timestamp
+            while (curr_timestamp <= TO_TIMESTAMP):
+                # Read the next message
+                topic_name, data, timestamp = reader.read_next()
+
+                # Check if the topic is in the set of topics to extract.
+                if topic_name in set(topics_to_extract):
+                
+                    # Create the topic if it doesn't exist
+                    if topic_name not in out_bag_topics:
+                        create_topic(writer, topic_name)
+                        out_bag_topics.add(topic_name)
+
+                    # Write the message to the output bag
+                    writer.write(topic_name, data, timestamp)
+
+                # Update the current timestamp
+                if topic_name == TO_TIMESTAMP_TOPIC:
+                    curr_timestamp = timestamp
+
+                # Print the current timestamp
+                if counter % 50000 == 0:
+                    print("Currently: ", curr_timestamp, " | Target: ", \
+                          TO_TIMESTAMP, " | Diff: ", (TO_TIMESTAMP - curr_timestamp)/1e9, " secs")
+
+                counter += 1
+
+            print("Found the last timestamp range!")
+            print("Timestamp: ", curr_timestamp)
+
+            # Break after the range is reached
+            break
+        
+        # Print the current timestamp
+        if (topic_name == FROM_TIMESTAMP_TOPIC):
+            timestamp_buffer = timestamp
+        if counter % 50000 == 0:
+            print("Currently: ", timestamp_buffer, " | Target: ", \
+                      FROM_TIMESTAMP, " | Diff: ", (FROM_TIMESTAMP - timestamp_buffer)/1e9, " secs")
+        counter += 1
 
     # Close the bag file
     del reader
-# ---------------------------------------------------------------------------- #
-
-
-# ---------------------------------------------------------------------------- #
-#                              WRITER FOR NEW BAG                              #
-# ---------------------------------------------------------------------------- #
-def create_topic(writer, topic_name, serialization_format='cdr'):
-    """
-    Create a new topic.
-    :param writer: writer instance
-    :param topic_name:
-    :param topic_type:
-    :param serialization_format:
-    :return:
-    """
-    global TYPE_MAP
-    topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
-                                     serialization_format=serialization_format)
-    writer.create_topic(topic)
-
-def write_to(topic_names: list, messages: list, timestamps: list, output_path: str = "output/"):
-    
-    writer = rosbag2_py.SequentialWriter()
-
-    # If the folder already exists, delete it
-    if os.path.exists(output_path):
-        shutil.rmtree(output_path)
-
-    # Opens the bag file and sets the converter options
-    writer.open(
-        rosbag2_py.StorageOptions(uri=output_path, storage_id="mcap"),
-        rosbag2_py.ConverterOptions(
-            input_serialization_format="cdr", output_serialization_format="cdr"
-        ),
-    )
-
-    # Create topics
-    global TOPICS_TO_EXTRACT
-    for topic_name in TOPICS_TO_EXTRACT:
-        create_topic(writer, topic_name)
-
-    # Write messages to the output bag
-    for i in range(len(topic_names)):
-        writer.write(topic_names[i], serialize_message(messages[i]), timestamps[i])
-    
-    # Close the bag file
     del writer
-# ---------------------------------------------------------------------------- #
-
 
 # ---------------------------------------------------------------------------- #
 #                                     MAIN                                     #
@@ -213,43 +256,31 @@ def write_to(topic_names: list, messages: list, timestamps: list, output_path: s
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "input", help="input bag path (folder or filepath) to read from"
+        "--input", help="input bag path (folder or filepath) to read from", default=None
     )
 
     args = parser.parse_args()
-
-    # Initalizing list to store the messages
-    messages = []
-    topic_names = []
-    timestamps = []
+    input_path = None
 
     # Check if Parameters are given.
     global TOPICS_TO_EXTRACT
     if TOPICS_TO_EXTRACT == []:
         TOPICS_TO_EXTRACT = None
 
-    print("Reading from Rosbag: ", args.input, "\n")
+    if args.input is None:
+        if INPUT_PATH is None:
+            print("No input path given. Exiting...")
+            return
+        else:
+            input_path = INPUT_PATH
+
+    print("Reading from Rosbag: ", input_path, "\n")
     print("Reading messages from bag...\n")
 
-    # TODO: Use tqdm to show progress bar (Not possible because of the generator)
-    count = 0
-
-    # Iterate through all the messages in the bag
-    for topic_name, msg, timestamp in read_messages(args.input, TOPICS_TO_EXTRACT):
-        topic_names.append(topic_name)
-        messages.append(msg)
-        timestamps.append(timestamp)
-        count += 1
-
-    # Make sure that all the lists are of same length
-    assert len(topic_names) == len(messages) == len(timestamps)
-    print("Passed the assertion check.\n")
-
-    print("Type Map: ", TYPE_MAP, "\n")
-
-    # Writing the messages to a new bag
-    print("Writing messages to bag...\n")
-    write_to(topic_names, messages, timestamps, OUTPUT_PATH)
+    # Filter and write the messages to a new bag
+    message_filter(input_path, TOPICS_TO_EXTRACT)
+    
+    print("Done! Enjoy your new bag file! :)")
 
 if __name__ == "__main__":
     main()
