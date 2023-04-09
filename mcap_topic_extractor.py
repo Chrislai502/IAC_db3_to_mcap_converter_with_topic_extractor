@@ -18,12 +18,14 @@ import rosbag2_py
 # sec: 1673037998
 # nanosec: 455526000
 # FROM_TIMESTAMP = 1673037998455526000
-FROM_TIMESTAMP = 1673037998455526000
+# FROM_TIMESTAMP = 1673037998455526000
+FROM_TIMESTAMP = 1673037588612982487
 FROM_TIMESTAMP_TOPIC = "/vimba_front_right_center/image" # topic to check timestamp from
 
 # sec: 1673038010
 # nanosec: 792381600
-TO_TIMESTAMP = 1673038010792381600
+# TO_TIMESTAMP = 1673038010792381600
+TO_TIMESTAMP = 1673037592257594379
 TO_TIMESTAMP_TOPIC = FROM_TIMESTAMP_TOPIC
 
 # ------------------------ Output path for the new bag ----------------------- #
@@ -58,7 +60,7 @@ TOPICS_TO_EXTRACT = ["/luminar_front_points", "/luminar_left_points", "/luminar_
 ,'/radar_left/header_information_detections'\
 ,'/radar_left/marker'\
 ,'/radar_left/vehicle_state'\
-,'/radar_liadar_detected_objects'\
+# ,'/radar_liadar_detected_objects'\
 ,'/radar_right/detection'\
 ,'/radar_right/header_information_detections'\
 ,'/radar_right/marker'\
@@ -197,7 +199,7 @@ def message_filter(input_bag: str, topics_to_extract: list = None):
         topic_name, data, timestamp = reader.read_next()
 
         if topic_name == FROM_TIMESTAMP_TOPIC and \
-            FROM_TIMESTAMP <= timestamp <= TO_TIMESTAMP_TOPIC:
+            FROM_TIMESTAMP <= timestamp <= TO_TIMESTAMP:
 
             print("Found the first timestamp range!")
             print("Timestamp: ", timestamp)
@@ -215,7 +217,9 @@ def message_filter(input_bag: str, topics_to_extract: list = None):
                 
                     # Create the topic if it doesn't exist
                     if topic_name not in out_bag_topics:
-                        create_topic(writer, topic_name)
+                        topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
+                                  serialization_format='cdr')
+                        writer.create_topic(topic)
                         out_bag_topics.add(topic_name)
 
                     # Write the message to the output bag
@@ -233,7 +237,6 @@ def message_filter(input_bag: str, topics_to_extract: list = None):
                 counter += 1
 
             print("Found the last timestamp range!")
-            print("Timestamp: ", curr_timestamp)
 
             # Break after the range is reached
             break
@@ -280,7 +283,8 @@ def main():
     # Filter and write the messages to a new bag
     message_filter(input_path, TOPICS_TO_EXTRACT)
     
-    print("Done! Enjoy your new bag file! :)")
+    print("Done! Output bag in :", OUTPUT_PATH)
+    print("Enjoy your new bag file! :)")
 
 if __name__ == "__main__":
     main()
