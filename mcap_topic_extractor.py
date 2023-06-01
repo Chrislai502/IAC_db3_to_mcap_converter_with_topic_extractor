@@ -19,6 +19,8 @@ import rosbag2_py
 # nanosec: 455526000
 # FROM_TIMESTAMP = 1673037998455526000
 # FROM_TIMESTAMP = 1673037998455526000
+FILTER_BY_TIMESTAMP = False
+
 FROM_TIMESTAMP = 1673037588612982487
 FROM_TIMESTAMP_TOPIC = "/vimba_front_right_center/image" # topic to check timestamp from
 
@@ -30,15 +32,25 @@ TO_TIMESTAMP_TOPIC = FROM_TIMESTAMP_TOPIC
 
 # ------------------------ Output path for the new bag ----------------------- #
 INPUT_PATH = "/media/Public/ROSBAG_BACKUPS/VEGAS_CES_2022/Jan6th_PTP_synced_cam_Lidar/rosbag2_2023_01_06-15_39_44/"
-OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/radar_only/timestamp_test/"
+INPUT_PATH = "/home/zhihao/rosbags/merged_rosbag/"
 
+OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/radar_only/timestamp_test/"
+OUTPUT_PATH = "/home/zhihao/rosbags/filtered_merged_rosbag/"
 # ---------------------- Topics to extract from the bag ---------------------- #
-TOPICS_TO_EXTRACT = ["/luminar_front_points", "/luminar_left_points", "/luminar_right_points", \
-                     "/radar_front/radar_visz_static", "/radar_front/radar_visz_static_array",\
-                     "/radar_front/radar_visz_moving", "/radar_front/radar_visz_moving_array",\
-                      "/perception/lvms_inside_vis", "/perception/lvms_outside_vis", \
-                      '/radar_right/marker', '/radar_front/from_can_bus',  \
-                      '/radar_front/to_can_bus'
+TOPICS_TO_EXTRACT = [
+
+# Lidar Topics
+"/luminar_front_points", \
+"/luminar_left_points", \
+"/luminar_right_points", \
+
+# Radar Topics
+"/radar_front/radar_visz_static",\
+"/radar_front/radar_visz_static_array",\
+"/radar_front/radar_visz_moving", "/radar_front/radar_visz_moving_array",\
+"/perception/lvms_inside_vis", "/perception/lvms_outside_vis", \
+'/radar_right/marker', '/radar_front/from_can_bus',  \
+'/radar_front/to_can_bus'
 ,'/radar_front/esr_status1'\
 ,'/radar_front/esr_status2'\
 ,'/radar_front/esr_status3'\
@@ -60,12 +72,19 @@ TOPICS_TO_EXTRACT = ["/luminar_front_points", "/luminar_left_points", "/luminar_
 ,'/radar_left/header_information_detections'\
 ,'/radar_left/marker'\
 ,'/radar_left/vehicle_state'\
-# ,'/radar_liadar_detected_objects'\
 ,'/radar_right/detection'\
 ,'/radar_right/header_information_detections'\
 ,'/radar_right/marker'\
 ,'/radar_right/marker_array'\
 ,'/radar_right/vehicle_state'\
+
+# Track Polygon
+,'/path'\
+,'/perception/lvms_inside'\
+,'/perception/lvms_inside_vis'\
+,'/perception/lvms_outside'\
+,'/perception/lvms_outside_vis'\
+
 
 # Novatel
 ,'/novatel_bottom/bestgnsspos'\
@@ -122,6 +141,7 @@ def message_filter(input_bag: str, topics_to_extract: list = None):
     global OUTPUT_PATH
     global FROM_TIMESTAMP_TOPIC
     global TO_TIMESTAMP_TOPIC
+    global FILTER_BY_TIMESTAMP
 
     reader = rosbag2_py.SequentialReader()
     writer = rosbag2_py.SequentialWriter()
@@ -178,76 +198,118 @@ def message_filter(input_bag: str, topics_to_extract: list = None):
     print ("\n\n All topics and types in the input bag: \n")
     for i in TYPE_MAP:
         print(i, "  |  ",  TYPE_MAP[i])
-    
-    # Check if FROM_TIMESTAMP_TOPIC and TO_TIMESTAMP_TOPIC are in the input bag
-    if FROM_TIMESTAMP_TOPIC not in TYPE_MAP or TO_TIMESTAMP_TOPIC not in TYPE_MAP:
-        print("ERROR: The topics for the timestamp range are not in the input bag.")
-        return
 
+    # Check if FILTER_BY_TIMESTAMP is True, Else Run through the whole bag
+    if FILTER_BY_TIMESTAMP:
 
-    '''
-    This while loop does the following:
-    1. Read the next message
-    2. Check if the topic is in the set of topics to extract
-    '''
-    counter = 0
-    timestamp_buffer = 0
-    print ("\nIterating through the input bag...")
-    while reader.has_next():
+        '''
+        This while loop does the following:
+        1. Read the next message
+        2. Check if the topic is in the set of topics to extract
+        '''
         
-        # Read the next message
-        topic_name, data, timestamp = reader.read_next()
+        # Check if FROM_TIMESTAMP_TOPIC and TO_TIMESTAMP_TOPIC are in the input bag
+        if FROM_TIMESTAMP_TOPIC not in TYPE_MAP or TO_TIMESTAMP_TOPIC not in TYPE_MAP:
+            print("ERROR: The topics for the timestamp range are not in the input bag.")
+            return
+        
+        counter = 0
+        timestamp_buffer = 0
+        print ("\n***MODE: Filtering by Timestamp***")
+        print ("\nIterating through the input bag...")
+        while reader.has_next():
+            
+            # Read the next message
+            topic_name, data, timestamp = reader.read_next()
 
-        if topic_name == FROM_TIMESTAMP_TOPIC and \
-            FROM_TIMESTAMP <= timestamp <= TO_TIMESTAMP:
+            if topic_name == FROM_TIMESTAMP_TOPIC and \
+                FROM_TIMESTAMP <= timestamp <= TO_TIMESTAMP:
 
-            print("Found the first timestamp range!")
-            print("Timestamp: ", timestamp)
+                print("Found the first timestamp range!")
+                print("Timestamp: ", timestamp)
+
+                # Keep a map of the topics that are in the output bag
+                out_bag_topics = set()
+
+                curr_timestamp = timestamp
+                while (curr_timestamp <= TO_TIMESTAMP):
+                    # Read the next message
+                    topic_name, data, timestamp = reader.read_next()
+
+                    # Check if the topic is in the set of topics to extract.
+                    if topic_name in set(topics_to_extract):
+                    
+                        # Create the topic if it doesn't exist
+                        if topic_name not in out_bag_topics:
+                            topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
+                                    serialization_format='cdr')
+                            writer.create_topic(topic)
+                            out_bag_topics.add(topic_name)
+
+                        # Write the message to the output bag
+                        writer.write(topic_name, data, timestamp)
+
+                    # Update the current timestamp
+                    if topic_name == TO_TIMESTAMP_TOPIC:
+                        curr_timestamp = timestamp
+
+                    # Print the current timestamp
+                    if counter % 50000 == 0:
+                        print("Currently: ", curr_timestamp, " | Target: ", \
+                            TO_TIMESTAMP, " | Diff: ", (TO_TIMESTAMP - curr_timestamp)/1e9, " secs")
+
+                    counter += 1
+
+                print("Found the last timestamp range!")
+
+                # Break after the range is reached
+                break
+            
+            # Print the current timestamp
+            if (topic_name == FROM_TIMESTAMP_TOPIC):
+                timestamp_buffer = timestamp
+            if counter % 50000 == 0:
+                print("Currently: ", timestamp_buffer, " | Target: ", \
+                        FROM_TIMESTAMP, " | Diff: ", (FROM_TIMESTAMP - timestamp_buffer)/1e9, " secs")
+            counter += 1
+            
+    else:
+        
+        '''
+        This while loop does the following:
+        1. Read the next message
+        2. Check if the topic is in the set of topics to extract
+        '''
+        counter = 0
+        timestamp_buffer = 0
+        print ("\n***MODE: Filtering the whole bag***")
+        print ("\nIterating through the input bag...")
+        while reader.has_next():
+            
+            # Read the next message
+            topic_name, data, timestamp = reader.read_next()
 
             # Keep a map of the topics that are in the output bag
             out_bag_topics = set()
 
-            curr_timestamp = timestamp
-            while (curr_timestamp <= TO_TIMESTAMP):
-                # Read the next message
-                topic_name, data, timestamp = reader.read_next()
+            # Check if the topic is in the set of topics to extract.
+            if topic_name in set(topics_to_extract):
+            
+                # Create the topic if it doesn't exist
+                if topic_name not in out_bag_topics:
+                    topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
+                            serialization_format='cdr')
+                    writer.create_topic(topic)
+                    out_bag_topics.add(topic_name)
 
-                # Check if the topic is in the set of topics to extract.
-                if topic_name in set(topics_to_extract):
-                
-                    # Create the topic if it doesn't exist
-                    if topic_name not in out_bag_topics:
-                        topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
-                                  serialization_format='cdr')
-                        writer.create_topic(topic)
-                        out_bag_topics.add(topic_name)
+                # Write the message to the output bag
+                writer.write(topic_name, data, timestamp)
 
-                    # Write the message to the output bag
-                    writer.write(topic_name, data, timestamp)
+            # Print the current timestamp
+            if counter % 50000 == 0:
+                print("Currently: ", timestamp, " | Target: NO TIMESTAMP", " | Diff: ", (TO_TIMESTAMP - timestamp)/1e9, " secs")
 
-                # Update the current timestamp
-                if topic_name == TO_TIMESTAMP_TOPIC:
-                    curr_timestamp = timestamp
-
-                # Print the current timestamp
-                if counter % 50000 == 0:
-                    print("Currently: ", curr_timestamp, " | Target: ", \
-                          TO_TIMESTAMP, " | Diff: ", (TO_TIMESTAMP - curr_timestamp)/1e9, " secs")
-
-                counter += 1
-
-            print("Found the last timestamp range!")
-
-            # Break after the range is reached
-            break
-        
-        # Print the current timestamp
-        if (topic_name == FROM_TIMESTAMP_TOPIC):
-            timestamp_buffer = timestamp
-        if counter % 50000 == 0:
-            print("Currently: ", timestamp_buffer, " | Target: ", \
-                      FROM_TIMESTAMP, " | Diff: ", (FROM_TIMESTAMP - timestamp_buffer)/1e9, " secs")
-        counter += 1
+            counter += 1
 
     # Close the bag file
     del reader
