@@ -9,11 +9,12 @@ import rosbag2_py
 # ---------------------------------------------------------------------------- #
 
 # ----------------------------- Timestamp Filter ----------------------------- #
-# (For ART rosbags, you can use camera timestamps to filter the bag (NPC synced likely))
-# These are the start and end timestamps to filter the bag, all TOPICS_TO_EXTRACT
-# will be included in the output bag if they have a message within this time range.
-
-# Example timestamps:
+# The Parameters are the start and end timestamps to filter the bag, all TOPICS_TO_EXTRACT
+# will be included in the output bag if they have a message within the range:
+#
+# FROM_TIMESTAMP_TOPIC.FROM_TIMESTAMP < TO_TIMESTAMP_TOPIC.timestamp < TO_TIMESTAMP_TOPIC.TO_TIMESTAMP
+#
+# Example FROM_TIMESTAMP and TO_TIMESTAMP formats:
 # sec: 1673037998
 # nanosec: 455526000
 # FROM_TIMESTAMP = 1673037998455526000
