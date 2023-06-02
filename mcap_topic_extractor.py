@@ -1,6 +1,5 @@
 """script that reads ROS2 messages from an MCAP bag using the rosbag2_py API."""
 import argparse
-
 import os
 import shutil
 import rosbag2_py
@@ -19,6 +18,8 @@ import rosbag2_py
 # nanosec: 455526000
 # FROM_TIMESTAMP = 1673037998455526000
 # FROM_TIMESTAMP = 1673037998455526000
+
+# Set to TRUE if using timestamp filter. Else, it will filter the whole rosbag.
 FILTER_BY_TIMESTAMP = False
 
 FROM_TIMESTAMP = 1673037588612982487
@@ -84,7 +85,6 @@ TOPICS_TO_EXTRACT = [
 ,'/perception/lvms_inside_vis'\
 ,'/perception/lvms_outside'\
 ,'/perception/lvms_outside_vis'\
-
 
 # Novatel
 ,'/novatel_bottom/bestgnsspos'\
