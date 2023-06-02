@@ -9,7 +9,6 @@ import rosbag2_py
 import os
 # from rclpy.serialization import serialize_message
 import shutil
-import time
 
 class MessageIterator:
     def __init__(self, cur, buffer_size: int = 1000) -> None:

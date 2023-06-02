@@ -32,12 +32,19 @@ FROM_TIMESTAMP_TOPIC = "/vimba_front_right_center/image" # topic to check timest
 TO_TIMESTAMP = 1673037592257594379
 TO_TIMESTAMP_TOPIC = FROM_TIMESTAMP_TOPIC
 
-# ------------------------ Output path for the new bag ----------------------- #
+# ------------------------ Input and Output Paths ----------------------- #
+# Input path is the path to the bag to be filtered.
+# Output path is the path to the new bag to be created.
+# Input bag can be in sqlite3 or mcap format, Output by default is mcap format uunless you change the code.
+# INPUT_PATH = "/media/Public/ROSBAG_BACKUPS/VEGAS_CES_2022/Jan6th_PTP_synced_cam_Lidar/rosbag2_2023_01_06-15_39_44/"
+# INPUT_PATH = "/home/zhihao/rosbags/merged_rosbag/"
 INPUT_PATH = "/media/Public/ROSBAG_BACKUPS/VEGAS_CES_2022/Jan6th_PTP_synced_cam_Lidar/rosbag2_2023_01_06-15_39_44/"
 INPUT_PATH = "/home/zhihao/rosbags/merged_rosbag/"
+INPUT_PATH = "/home/zhihao/chris/testing_bag/"
 
 OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/radar_only/timestamp_test/"
 OUTPUT_PATH = "/home/zhihao/rosbags/filtered_merged_rosbag/"
+OUTPUT_PATH = "/home/zhihao/chris/testing_bag_mcap/"
 # ---------------------- Topics to extract from the bag ---------------------- #
 TOPICS_TO_EXTRACT = [
 
@@ -155,13 +162,26 @@ def message_filter(input_bag: str, topics_to_extract: list = None):
             shutil.rmtree(OUTPUT_PATH)
             print("Folder deleted.")
         else:
-            print("Deletion cancelled.")
-            return
+            print("Deletion cancelled. Re-run the script with a different OUTPUT_PATH.")
+            exit()
+            
+    # Check if the extension is a db3 or MCAP
+    files = os.listdir(input_bag)
+    for file in files:
+        if file.endswith(".db3"):
+            store_type = "sqlite3"
+            print("Detected Input bag is a db3 file.")
+        elif file.endswith(".mcap"):
+            store_type = "mcap"
+            print("Detected Input bag is a mcap file.")
+    if not store_type:
+        print("Error: Input bag is not a db3 or mcap file.")
+        exit()
 
     # Opens the bag files and sets the converter options
     try:
         reader.open(
-            rosbag2_py.StorageOptions(uri=input_bag, storage_id="mcap"),
+            rosbag2_py.StorageOptions(uri=input_bag, storage_id=store_type),
             rosbag2_py.ConverterOptions(
                 input_serialization_format="cdr", output_serialization_format="cdr"
             ),
