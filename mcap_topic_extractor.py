@@ -56,7 +56,8 @@ TOPICS_TO_EXTRACT = [
 # Radar Topics
 "/radar_front/radar_visz_static",\
 "/radar_front/radar_visz_static_array",\
-"/radar_front/radar_visz_moving", "/radar_front/radar_visz_moving_array",\
+"/radar_front/radar_visz_moving", \
+# "/radar_front/radar_visz_moving_array",\
 "/perception/lvms_inside_vis", "/perception/lvms_outside_vis", \
 '/radar_right/marker', '/radar_front/from_can_bus',  \
 '/radar_front/to_can_bus'
@@ -84,7 +85,7 @@ TOPICS_TO_EXTRACT = [
 ,'/radar_right/detection'\
 ,'/radar_right/header_information_detections'\
 ,'/radar_right/marker'\
-,'/radar_right/marker_array'\
+# ,'/radar_right/marker_array'\
 ,'/radar_right/vehicle_state'\
 
 # Track Polygon
@@ -139,7 +140,7 @@ TOPICS_TO_EXTRACT = [
 # ---------------------------------------------------------------------------- #
 #                                MESSAGE_FILTER                                #
 # ---------------------------------------------------------------------------- #
-def message_filter(input_bag: str, topics_to_extract: list = None):
+def message_filter(input_bag_folder: str, topics_to_extract: list = None):
     
     global TOPIC_TYPES
     global TYPE_MAP
@@ -166,7 +167,7 @@ def message_filter(input_bag: str, topics_to_extract: list = None):
             exit()
             
     # Check if the extension is a db3 or MCAP
-    files = os.listdir(input_bag)
+    files = os.listdir(input_bag_folder)
     for file in files:
         if file.endswith(".db3"):
             store_type = "sqlite3"
@@ -181,7 +182,7 @@ def message_filter(input_bag: str, topics_to_extract: list = None):
     # Opens the bag files and sets the converter options
     try:
         reader.open(
-            rosbag2_py.StorageOptions(uri=input_bag, storage_id=store_type),
+            rosbag2_py.StorageOptions(uri=input_bag_folder, storage_id=store_type),
             rosbag2_py.ConverterOptions(
                 input_serialization_format="cdr", output_serialization_format="cdr"
             ),
@@ -219,6 +220,17 @@ def message_filter(input_bag: str, topics_to_extract: list = None):
     print ("\n\n All topics and types in the input bag: \n")
     for i in TYPE_MAP:
         print(i, "  |  ",  TYPE_MAP[i])
+        
+    # Check if the topics to extract are in the input bag
+    if TOPICS_TO_EXTRACT:
+        for topic in TOPICS_TO_EXTRACT:
+            if topic not in TYPE_MAP:
+                print("ERROR: The topic ", topic, " is not in the input bag.")
+                exit()
+            print("Topic ", topic, " found in the input bag.")
+    else:
+        print("FATAL ERROR: TOPICS_TO_EXTRACT not defined.")
+        
 
     # Check if FILTER_BY_TIMESTAMP is True, Else Run through the whole bag
     if FILTER_BY_TIMESTAMP:
