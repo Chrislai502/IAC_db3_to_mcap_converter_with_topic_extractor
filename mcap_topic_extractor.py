@@ -21,15 +21,17 @@ import rosbag2_py
 # FROM_TIMESTAMP = 1673037998455526000
 
 # Set to TRUE if using timestamp filter. Else, it will filter the whole rosbag.
-FILTER_BY_TIMESTAMP = False
+FILTER_BY_TIMESTAMP = True
 
 FROM_TIMESTAMP = 1673037588612982487
-FROM_TIMESTAMP_TOPIC = "/vimba_front_right_center/image" # topic to check timestamp from
+FROM_TIMESTAMP = -float("inf")
+FROM_TIMESTAMP_TOPIC = "/luminar_front_points" # topic to check timestamp from
 
 # sec: 1673038010
 # nanosec: 792381600
 # TO_TIMESTAMP = 1673038010792381600
 TO_TIMESTAMP = 1673037592257594379
+TO_TIMESTAMP = float("inf")
 TO_TIMESTAMP_TOPIC = FROM_TIMESTAMP_TOPIC
 
 # ------------------------ Input and Output Paths ----------------------- #
@@ -320,7 +322,7 @@ def message_filter(input_bag_folder: str):
                 out_bag_topics = set()
 
                 curr_timestamp = timestamp
-                while (curr_timestamp <= TO_TIMESTAMP):
+                while (curr_timestamp <= TO_TIMESTAMP and reader.has_next()):
                     
                     # Read the next message
                     topic_name, data, timestamp = reader.read_next()
