@@ -1,0 +1,40 @@
+INCLUDE_TOPICS_MODE: false
+
+TOPICS_TO_EXCLUDE:
+  - /radar_detected_objs
+  - /clustered_dist2wall
+  - /clusters_with_feature
+  - /concatenate_data_synchronizer/debug/cyclic_time_ms
+  - /concatenate_data_synchronizer/debug/processing_time_ms
+  - /crop_box_filter/crop_box_polygon
+  - /crop_box_filter/debug/cyclic_time_ms
+  - /crop_box_filter/debug/processing_time_ms
+  - /debug/clusters
+  - /debug/divided_objects 
+  - /debug/initial_objects  
+  - /debug/merged_objects
+  - /debug/tracked_objects  
+  - /ego_crop_box_filter/crop_box_polygon
+  - /tracked_objects
+  - /tracker_detected_objects
+  - /debug/merged_objects
+  - /radar_liadar_detected_objects
+  - /objects
+  - /debug/tracked_objects  
+  - /debug/initial_objects  
+  - /radar_detected_objs
+  - /merged_objects
+  - /debug/divided_objects  # Add more topics to exclude here...
+
+TOPICS_TO_INCLUDE:
+  - /luminar_front_points
+  - /luminar_left_points
+  - /luminar_right_points
+
+FILTER_BY_TIMESTAMP: true
+
+FROM_TIMESTAMP: 1673037588612982487
+TO_TIMESTAMP: 1673037592257594379
+
+INPUT_PATH: "/home/zhihao/rosbags/merged_rosbag/"
+OUTPUT_PATH: "/home/zhihao/rosbags/filtered_exclude_merged_rosbag/"

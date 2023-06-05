@@ -3,10 +3,24 @@ import argparse
 import os
 import shutil
 import rosbag2_py
+import yaml
+
 
 # ---------------------------------------------------------------------------- #
 #                                  PARAMETERS                                  #
 # ---------------------------------------------------------------------------- #
+# Load global constants from YAML file
+with open('config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+
+TOPICS_TO_EXCLUDE = set(config.get('TOPICS_TO_EXCLUDE', []))
+INCLUDE_TOPICS_MODE = config.get('INCLUDE_TOPICS_MODE', False)
+TOPICS_TO_INCLUDE = set(config.get('TOPICS_TO_INCLUDE', []))
+FILTER_BY_TIMESTAMP = config.get('FILTER_BY_TIMESTAMP', False)
+FROM_TIMESTAMP = config.get('FROM_TIMESTAMP', 0)
+TO_TIMESTAMP = config.get('TO_TIMESTAMP', float("inf"))
+INPUT_PATH = config.get('INPUT_PATH', '')
+OUTPUT_PATH = config.get('OUTPUT_PATH', '')
 
 # ----------------------------- Timestamp Filter ----------------------------- #
 # The Parameters are the start and end timestamps to filter the bag, all TOPICS_TO_INCLUDE
@@ -190,7 +204,6 @@ TOPICS_TO_INCLUDE = {
 # /vehicle/status
 }
 # ---------------------------------------------------------------------------- #
-
 
 # ---------------------------------------------------------------------------- #
 #                                MESSAGE_FILTER                                #
