@@ -9,7 +9,7 @@ import rosbag2_py
 # ---------------------------------------------------------------------------- #
 
 # ----------------------------- Timestamp Filter ----------------------------- #
-# The Parameters are the start and end timestamps to filter the bag, all TOPICS_TO_EXTRACT
+# The Parameters are the start and end timestamps to filter the bag, all TOPICS_TO_INCLUDE
 # will be included in the output bag if they have a message within the range:
 #
 # FROM_TIMESTAMP_TOPIC.FROM_TIMESTAMP < TO_TIMESTAMP_TOPIC.timestamp < TO_TIMESTAMP_TOPIC.TO_TIMESTAMP
@@ -49,7 +49,7 @@ OUTPUT_PATH = "/home/zhihao/rosbags/filtered_exclude_merged_rosbag/"
 # ---------------------- Topics to extract from the bag ---------------------- #
 
 # Using the topics to extract list or Topics to exclude
-USE_TOPICS_TO_EXTRACT = False
+INCLUDE_TOPICS_MODE = False 
 
 TOPICS_TO_EXCLUDE = {
     # Lidar Topics  
@@ -79,8 +79,8 @@ TOPICS_TO_EXCLUDE = {
     "/debug/divided_objects",\
 }
 
-# If USE_TOPICS_TO_EXTRACT is set to True, the script will only extract the topics in this list.
-TOPICS_TO_EXTRACT = {
+# If INCLUDE_TOPICS_MODE is set to True, the script will only extract the topics in this list.
+TOPICS_TO_INCLUDE = {
 # Lidar Topics
 "/luminar_front_points", \
 "/luminar_left_points", \
@@ -193,18 +193,18 @@ TOPICS_TO_EXTRACT = {
 # ---------------------------------------------------------------------------- #
 #                                MESSAGE_FILTER                                #
 # ---------------------------------------------------------------------------- #
-def message_filter(input_bag_folder: str, topics_to_extract: list = None):
+def message_filter(input_bag_folder: str):
     
     global TOPIC_TYPES
     global TYPE_MAP
-    global TOPICS_TO_EXTRACT
+    global TOPICS_TO_INCLUDE
     global FROM_TIMESTAMP
     global TO_TIMESTAMP
     global OUTPUT_PATH
     global FROM_TIMESTAMP_TOPIC
     global TO_TIMESTAMP_TOPIC
     global FILTER_BY_TIMESTAMP
-    global USE_TOPICS_TO_EXTRACT
+    global INCLUDE_TOPICS_MODE
     global TOPICS_TO_EXCLUDE
 
     reader = rosbag2_py.SequentialReader()
@@ -277,14 +277,14 @@ def message_filter(input_bag_folder: str, topics_to_extract: list = None):
         print(i, "  |  ",  TYPE_MAP[i])
         
     # Check if the topics to extract are in the input bag
-    if TOPICS_TO_EXTRACT and USE_TOPICS_TO_EXTRACT:
-        for topic in TOPICS_TO_EXTRACT:
+    if TOPICS_TO_INCLUDE and INCLUDE_TOPICS_MODE:
+        for topic in TOPICS_TO_INCLUDE:
             if topic not in TYPE_MAP:
                 print("ERROR: The topic ", topic, " is not in the input bag.")
                 exit()
             print("Topic ", topic, " found in the input bag.")
     else:
-        print("FATAL ERROR: TOPICS_TO_EXTRACT not defined.")
+        print("FATAL ERROR: TOPICS_TO_INCLUDE not defined.")
         
 
     # Check if FILTER_BY_TIMESTAMP is True, Else Run through the whole bag
@@ -326,10 +326,10 @@ def message_filter(input_bag_folder: str, topics_to_extract: list = None):
                     topic_name, data, timestamp = reader.read_next()
                     
                     # Check if the topic is in the set of topics to extract or to exclude.
-                    if USE_TOPICS_TO_EXTRACT:
+                    if INCLUDE_TOPICS_MODE:
                         
                         # Check if the topic is in the set of topics to extract.
-                        if topic_name in topics_to_extract:
+                        if topic_name in TOPICS_TO_INCLUDE:
                         
                             # Create the topic if it doesn't exist
                             if topic_name not in out_bag_topics:
@@ -397,10 +397,10 @@ def message_filter(input_bag_folder: str, topics_to_extract: list = None):
             out_bag_topics = set()
 
             # Check if the topic is in the set of topics to extract or to exclude.
-            if USE_TOPICS_TO_EXTRACT:
+            if INCLUDE_TOPICS_MODE:
 
                 # Check if the topic is in the set of topics to extract.
-                if topic_name in set(topics_to_extract):
+                if topic_name in TOPICS_TO_INCLUDE:
                 
                     # Create the topic if it doesn't exist
                     if topic_name not in out_bag_topics:
@@ -448,9 +448,9 @@ def main():
     input_path = None
 
     # Check if Parameters are given.
-    global TOPICS_TO_EXTRACT
-    if TOPICS_TO_EXTRACT == []:
-        TOPICS_TO_EXTRACT = None
+    global TOPICS_TO_INCLUDE
+    if TOPICS_TO_INCLUDE == []:
+        TOPICS_TO_INCLUDE = None
 
     if args.input is None:
         if INPUT_PATH is None:
@@ -463,7 +463,7 @@ def main():
     print("Reading messages from bag...\n")
 
     # Filter and write the messages to a new bag
-    message_filter(input_path, TOPICS_TO_EXTRACT)
+    message_filter(input_path)
     
     print("Done! Output bag in :", OUTPUT_PATH)
     print("Enjoy your new bag file! :)")
