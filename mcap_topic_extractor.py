@@ -40,14 +40,47 @@ TO_TIMESTAMP_TOPIC = FROM_TIMESTAMP_TOPIC
 # INPUT_PATH = "/home/zhihao/rosbags/merged_rosbag/"
 INPUT_PATH = "/media/Public/ROSBAG_BACKUPS/VEGAS_CES_2022/Jan6th_PTP_synced_cam_Lidar/rosbag2_2023_01_06-15_39_44/"
 INPUT_PATH = "/home/zhihao/rosbags/merged_rosbag/"
-INPUT_PATH = "/home/zhihao/chris/testing_bag/"
+# INPUT_PATH = "/home/zhihao/chris/testing_bag/"
 
 OUTPUT_PATH = "/media/roar/2a177b93-e672-418b-8c28-b075e87fcbc7/Chris_short_bags/Rosbags/radar_only/timestamp_test/"
-OUTPUT_PATH = "/home/zhihao/rosbags/filtered_merged_rosbag/"
-OUTPUT_PATH = "/home/zhihao/chris/testing_bag_mcap/"
-# ---------------------- Topics to extract from the bag ---------------------- #
-TOPICS_TO_EXTRACT = [
+OUTPUT_PATH = "/home/zhihao/rosbags/filtered_exclude_merged_rosbag/"
+# OUTPUT_PATH = "/home/zhihao/chris/testing_bag_mcap/"
 
+# ---------------------- Topics to extract from the bag ---------------------- #
+
+# Using the topics to extract list or Topics to exclude
+USE_TOPICS_TO_EXTRACT = False
+
+TOPICS_TO_EXCLUDE = {
+    # Lidar Topics  
+    "/radar_detected_objs", \
+    "/clustered_dist2wall",\
+    "/clusters_with_feature",\
+    "/concatenate_data_synchronizer/debug/cyclic_time_ms",\
+    "/concatenate_data_synchronizer/debug/processing_time_ms",\
+    "/crop_box_filter/crop_box_polygon",\
+    "/crop_box_filter/debug/cyclic_time_ms",\
+    "/crop_box_filter/debug/processing_time_ms",\
+    "/debug/clusters",\
+    "/debug/divided_objects",\
+    "/debug/initial_objects",\
+    "/debug/merged_objects",\
+    "/debug/tracked_objects",\
+    "/ego_crop_box_filter/crop_box_polygon",\
+    "/tracked_objects",\
+    "/tracker_detected_objects",\
+    "/debug/merged_objects",\
+    "/radar_liadar_detected_objects",\
+    "/objects",\
+    "/debug/tracked_objects",\
+    "/debug/initial_objects",\
+    "/radar_detected_objs",\
+    "/merged_objects",\
+    "/debug/divided_objects",\
+}
+
+# If USE_TOPICS_TO_EXTRACT is set to True, the script will only extract the topics in this list.
+TOPICS_TO_EXTRACT = {
 # Lidar Topics
 "/luminar_front_points", \
 "/luminar_left_points", \
@@ -133,7 +166,27 @@ TOPICS_TO_EXTRACT = [
 ,'/novatel_top/oem7raw'\
 ,'/novatel_top/rawimu'\
 ,'/novatel_top/rxstatus'\
-,'/novatel_top/time']
+,'/novatel_top/time'
+
+# /vehicle/steering_report
+# /vehicle/wheel_potentiometer_report
+# /vehicle/wheel_speed_report
+# /vehicle/wheel_strain_gauge_report
+# /visualization
+# /tracker_detected_objects
+# /ttl
+# /vehicle/engine_pressures_report
+# /vehicle/engine_report
+# /vehicle/fault_report
+# /vehicle/fl_tire_pressure
+# /vehicle/fr_tire_pressure
+# /vehicle/misc_report
+# /vehicle/reset_state
+# /vehicle/rl_tire_pressure
+# /vehicle/rr_tire_pressure
+# /vehicle/state
+# /vehicle/status
+}
 # ---------------------------------------------------------------------------- #
 
 
@@ -151,6 +204,8 @@ def message_filter(input_bag_folder: str, topics_to_extract: list = None):
     global FROM_TIMESTAMP_TOPIC
     global TO_TIMESTAMP_TOPIC
     global FILTER_BY_TIMESTAMP
+    global USE_TOPICS_TO_EXTRACT
+    global TOPICS_TO_EXCLUDE
 
     reader = rosbag2_py.SequentialReader()
     writer = rosbag2_py.SequentialWriter()
@@ -222,7 +277,7 @@ def message_filter(input_bag_folder: str, topics_to_extract: list = None):
         print(i, "  |  ",  TYPE_MAP[i])
         
     # Check if the topics to extract are in the input bag
-    if TOPICS_TO_EXTRACT:
+    if TOPICS_TO_EXTRACT and USE_TOPICS_TO_EXTRACT:
         for topic in TOPICS_TO_EXTRACT:
             if topic not in TYPE_MAP:
                 print("ERROR: The topic ", topic, " is not in the input bag.")
@@ -266,21 +321,37 @@ def message_filter(input_bag_folder: str, topics_to_extract: list = None):
 
                 curr_timestamp = timestamp
                 while (curr_timestamp <= TO_TIMESTAMP):
+                    
                     # Read the next message
                     topic_name, data, timestamp = reader.read_next()
-
-                    # Check if the topic is in the set of topics to extract.
-                    if topic_name in set(topics_to_extract):
                     
-                        # Create the topic if it doesn't exist
-                        if topic_name not in out_bag_topics:
-                            topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
-                                    serialization_format='cdr')
-                            writer.create_topic(topic)
-                            out_bag_topics.add(topic_name)
+                    # Check if the topic is in the set of topics to extract or to exclude.
+                    if USE_TOPICS_TO_EXTRACT:
+                        
+                        # Check if the topic is in the set of topics to extract.
+                        if topic_name in topics_to_extract:
+                        
+                            # Create the topic if it doesn't exist
+                            if topic_name not in out_bag_topics:
+                                topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
+                                        serialization_format='cdr')
+                                writer.create_topic(topic)
+                                out_bag_topics.add(topic_name)
 
-                        # Write the message to the output bag
-                        writer.write(topic_name, data, timestamp)
+                            # Write the message to the output bag
+                            writer.write(topic_name, data, timestamp)
+                    else :
+                        if topic_name not in TOPICS_TO_EXCLUDE:
+                            
+                            # Create the topic if it doesn't exist
+                            if topic_name not in out_bag_topics:
+                                topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
+                                        serialization_format='cdr')
+                                writer.create_topic(topic)
+                                out_bag_topics.add(topic_name)
+                            
+                            # Write the message to the output bag
+                            writer.write(topic_name, data, timestamp)
 
                     # Update the current timestamp
                     if topic_name == TO_TIMESTAMP_TOPIC:
@@ -325,18 +396,34 @@ def message_filter(input_bag_folder: str, topics_to_extract: list = None):
             # Keep a map of the topics that are in the output bag
             out_bag_topics = set()
 
-            # Check if the topic is in the set of topics to extract.
-            if topic_name in set(topics_to_extract):
-            
-                # Create the topic if it doesn't exist
-                if topic_name not in out_bag_topics:
-                    topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
-                            serialization_format='cdr')
-                    writer.create_topic(topic)
-                    out_bag_topics.add(topic_name)
+            # Check if the topic is in the set of topics to extract or to exclude.
+            if USE_TOPICS_TO_EXTRACT:
 
-                # Write the message to the output bag
-                writer.write(topic_name, data, timestamp)
+                # Check if the topic is in the set of topics to extract.
+                if topic_name in set(topics_to_extract):
+                
+                    # Create the topic if it doesn't exist
+                    if topic_name not in out_bag_topics:
+                        topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
+                                serialization_format='cdr')
+                        writer.create_topic(topic)
+                        out_bag_topics.add(topic_name)
+
+                    # Write the message to the output bag
+                    writer.write(topic_name, data, timestamp)
+                
+            else :
+                if topic_name not in TOPICS_TO_EXCLUDE:
+                    
+                    # Create the topic if it doesn't exist
+                    if topic_name not in out_bag_topics:
+                        topic = rosbag2_py.TopicMetadata(name=topic_name, type=TYPE_MAP[topic_name], \
+                                serialization_format='cdr')
+                        writer.create_topic(topic)
+                        out_bag_topics.add(topic_name)
+                    
+                    # Write the message to the output bag
+                    writer.write(topic_name, data, timestamp)
 
             # Print the current timestamp
             if counter % 50000 == 0:
