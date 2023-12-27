@@ -14,10 +14,79 @@ from sensor_msgs.msg import PointCloud2, PointField
 import std_msgs.msg
 import ctypes
 import struct
+import matplotlib.pyplot as plt
 # from ros2_ars540_msgs.msg import DetectionSegmentArray, DetectionSegment
 
 INPUT_PATH = "/media/chris/IACSSD4TBT2/dec_13_23_run_2/rosbag2_2023_12_13-15_48_09/"
 OUTPUT_PATH = "/media/chris/IACSSD4TBT2/dec_13_23_run_2/radar_ptc/rosbag2_2023_12_13-15_48_09/"
+
+# Creating and saving all of the histograms:
+titles = [
+    "range",
+    "radial_velocity",
+    "azimuth_angle",
+    "elevation_angle",
+    "radar_cross_section",
+    "ambgt_id",
+    "meas_model",
+    "signal_noise_ratio",
+    "peak_detection_threshold",
+    "existence_prob",
+    "multi_target_prob",
+    "received_signal_strength",
+    "az_ang_std_dev",
+    "elev_ang_std_dev",
+    "azi_qual",
+    "elev_qual",
+    "range_qual",
+    "rad_velo_qual",
+    "mask_angl_sect_azi",
+    "mask_angl_sect_elev",
+]
+
+_range = []
+_radial_velocity= []
+_azimuth_angle= []
+_elevation_angle= []
+_radar_cross_section= []
+_ambgt_id= []
+_meas_model = []
+_signal_noise_ratio= []
+_peak_detection_threshold= []
+_existence_prob= []
+_multi_target_prob= []
+_received_signal_strength= []
+_az_ang_std_dev= []
+_elev_ang_std_dev= []
+_azi_qual= []
+_elev_qual= []
+_range_qual= []
+_rad_velo_qual= []
+_mask_angl_sect_azi= []
+_mask_angl_sect_elev= []
+
+pointers = [
+    _range,
+    _radial_velocity,
+    _azimuth_angle,
+    _elevation_angle,
+    _radar_cross_section,
+    _ambgt_id,
+    _meas_model,
+    _signal_noise_ratio,
+    _peak_detection_threshold,
+    _existence_prob,
+    _multi_target_prob,
+    _received_signal_strength,
+    _az_ang_std_dev,
+    _elev_ang_std_dev,
+    _azi_qual,
+    _elev_qual,
+    _range_qual,
+    _rad_velo_qual,
+    _mask_angl_sect_azi,
+    _mask_angl_sect_elev,
+]
 
 
 # If the output folder already exists, ask the user if they want to delete it
@@ -96,11 +165,37 @@ TOPICS_TO_EXCLUDE = {
 radar_topicname="/ars548_process/detections"
 radar_ptc_topicname="/ars548_process/detections/pointcloud"
 
+def apply_conversion(detection):
+
+    # Doing the conversions
+    detection.range = detection.range * 0.005
+    detection.radial_velocity = -200 + detection.radial_velocity * 0.005
+    detection.azimuth_angle = -1.571 + detection.azimuth_angle * 1.75e-04
+    detection.elevation_angle = -1.571 + detection.elevation_angle* 1.75e-04
+    detection.radar_cross_section = -100 + detection.radar_cross_section * 0.0035
+    detection.ambgt_id = detection.ambgt_id
+    detection.meas_model = detection.meas_model
+    detection.signal_noise_ratio = detection.signal_noise_ratio * 0.25
+    detection.peak_detection_threshold = -177.8 + detection.peak_detection_threshold * 0.7
+    detection.existence_prob = detection.existence_prob
+    detection.multi_target_prob = detection.multi_target_prob
+    detection.received_signal_strength = -177.8 + detection.received_signal_strength * 0.7
+    detection.az_ang_std_dev = detection.az_ang_std_dev * 1.75E-04
+    detection.elev_ang_std_dev = detection.elev_ang_std_dev * 3.49E-04
+    detection.azi_qual = detection.azi_qual
+    detection.elev_qual = detection.elev_qual
+    detection.range_qual = detection.range_qual
+    detection.rad_velo_qual = detection.rad_velo_qual
+    detection.mask_angl_sect_azi = detection.mask_angl_sect_azi * 0.0124
+    detection.mask_angl_sect_elev = detection.mask_angl_sect_elev * 0.0124
+
+    return detection
 
 ##########################################################################################################3
 
 def process_radar(radar_msg):
     # Assuming radar_msg is a DetectionSegmentArray message
+    global range_, azimuth_, elevation_, velocity_
 
     # Create a PointCloud2 message
     cloud_msg = PointCloud2()
@@ -122,17 +217,51 @@ def process_radar(radar_msg):
     cloud_msg.is_dense = True  # If there are no invalid points
 
     # Process each detection and convert to point cloud data
+    '''
+    The sensor should have 
+    - 300m range
+    - +-60 fov
+    '''
     points = []
+    counter = 0
+
     for detection in radar_msg.detections:
-        # Convert detection data (range, azimuth, elevation) to x, y, z
-        # This conversion depends on the radar's coordinate system and units
-        # Example conversion (assuming spherical coordinates and meter units):
-        r = detection.range  # range
-        azimuth = np.deg2rad(detection.azimuth_angle)  # Convert to radians
-        elevation = np.deg2rad(detection.elevation_angle)  # Convert to radians
+
+        # if counter % 10 == 0:
+        #     # Saving data for histogram
+        #     range_.append(detection.range)
+        #     azimuth_.append(detection.azimuth_angle)
+        #     elevation_.append(detection.elevation_angle)
+        #     velocity_.append(detection.radial_velocity)
+        # counter += 1
+
+        # # Convert detection data (range, azimuth, elevation) to x, y, z
+        # # This conversion depends on the radar's coordinate system and units
+        # # Example conversion (assuming spherical coordinates and meter units):
+        # r = 0.005 * detection.range
+        # azimuth   = -1.571 + (1.75 * 1e-4 * detection.azimuth_angle)  # Convert to radians
+        # elevation = -1.571 + (1.75 * 1e-4 * detection.elevation_angle)  # Convert to radians
+        # r_vel     = -200   + (0.005* detection.radial_velocity) 
+        # detection = apply_conversion(detection)
+        # x = r * np.cos(elevation) * np.sin(azimuth)
+        # y = r * np.cos(elevation) * np.cos(azimuth)
+        # z = r * np.sin(elevation)
+
+        detection = apply_conversion(detection)
+        elevation = detection.elevation_angle
+        azimuth = detection.azimuth_angle
+        r = detection.range
+
         x = r * np.cos(elevation) * np.sin(azimuth)
         y = r * np.cos(elevation) * np.cos(azimuth)
         z = r * np.sin(elevation)
+
+        if counter % 10 == 0:
+            # Saving data for histogram
+            for i in range(len(titles)):
+                val = getattr(detection, titles[i], None)
+                pointers[i].append(val)
+        counter += 1
 
         # Pack the point data to fit the PointCloud2 format
         packed_data = struct.pack('fff', x, y, z)
@@ -218,3 +347,18 @@ while reader.has_next():
 # Close the bag file
 del reader
 del writer
+
+
+# Creating and saving all of the histograms:
+
+for t, p in zip(titles, pointers):
+    plt.figure()
+    plt.hist(p, bins=15, color='blue', edgecolor='black')
+
+    # Add titles and labels
+    plt.title(t)
+    plt.xlabel('Value')
+    plt.ylabel('Frequency')
+
+    # Save and show
+    plt.savefig("plots/" + t + '_histogram.jpg')
